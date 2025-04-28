@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Outage Probability Map - Colorado</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Leaflet CSS + JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        height: 88vh;
+        width: 100%;
+      }
+      #controls {
+        text-align: center;
+        margin: 10px 0;
+      }
+      #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        visibility: hidden;
+        z-index: 1000;
+        font-family: sans-serif;
+        color: #333;
+      }
+      .spinner {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #3498db;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .overlay-text {
+        font-size: 1.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="overlay">
+      <div class="spinner"></div>
+      <div class="overlay-text">
+        We're thinking very hard,<br />this may take up to a minute.
+      </div>
+    </div>
+
+    <h2 style="text-align: center">Power Outage Risk Map</h2>
+    <div id="controls">
+      <label for="datetime">Select Forecast Time:</label>
+      <input type="datetime-local" id="datetime" />
+      <button id="load-btn" onclick="loadPredictions()">
+        Load Predictions
+      </button>
+      <button onclick="loadCurrent()">Current Forecast</button>
+    </div>
+    <div id="map"></div>
+
+    <script>
+      const dtInput = document.getElementById("datetime");
+      const loadBtn = document.getElementById("load-btn");
+      const overlay = document.getElementById("overlay");
+      let markers = [];
+
+      // initialize map
+      const map = L.map("map").setView([39.0, -105.5], 7);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      function getColor(prob) {
+        if (prob > 0.99) return "red";
+        if (prob > 0.95) return "orange";
+        if (prob > 0.85) return "yellow";
+        return "green";
+      }
+
+      function showOverlay() {
+        overlay.style.visibility = "visible";
+      }
+      function hideOverlay() {
+        overlay.style.visibility = "hidden";
+      }
+
+      function fetchAndPlot(url) {
+        showOverlay();
+        fetch(url)
+          .then((r) => r.json())
+          .then((data) => {
+            markers.forEach((m) => map.removeLayer(m));
+            markers = [];
+            data.forEach((pt) => {
+              const color = getColor(pt.probability);
+              const c = L.circleMarker([pt.latitude, pt.longitude], {
+                radius: 8,
+                color,
+                fillColor: color,
+                fillOpacity: 0.7,
+                weight: 1,
+              }).addTo(map);
+              c.bindPopup(
+                `Lat:${pt.latitude}<br>Lon:${pt.longitude}<br><b>Prob:</b>${pt.probability}`
+              );
+              markers.push(c);
+            });
+          })
+          .catch(() => alert("Error loading predictions."))
+          .finally(hideOverlay);
+      }
+
+      function loadPredictions() {
+        const dt = dtInput.value;
+        if (!dt) return alert("Please select a forecast time.");
+        fetchAndPlot(`/predict?datetime=${encodeURIComponent(dt)}`);
+      }
+
+      function loadCurrent() {
+        const now = new Date();
+        now.setMinutes(0, 0, 0, 0);
+        const iso = now.toISOString().slice(0, 16);
+        dtInput.value = iso;
+        updateLoadButtonState();
+        fetchAndPlot("/predict");
+      }
+
+      function updateLoadButtonState() {
+        const sel = dtInput.value;
+        if (!sel) {
+          loadBtn.disabled = true;
+          return;
+        }
+        // compare YYYY-MM-DDTHH
+        const pickHour = new Date(sel).toISOString().slice(0, 13);
+        const now = new Date();
+        now.setMinutes(0, 0, 0, 0);
+        const nowHour = now.toISOString().slice(0, 13);
+        loadBtn.disabled = pickHour === nowHour;
+      }
+
+      // set date picker max to yesterday 23:59
+      (function setMax() {
+        const t = new Date(),
+          y = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 1),
+          mm = String(y.getMonth() + 1).padStart(2, "0"),
+          dd = String(y.getDate()).padStart(2, "0");
+        dtInput.max = `${y.getFullYear()}-${mm}-${dd}T23:59`;
+      })();
+
+      // wire up
+      dtInput.addEventListener("input", updateLoadButtonState);
+
+      // on load
+      window.onload = loadCurrent;
+    </script>
+  </body>
+</html>

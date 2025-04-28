@@ -1,0 +1,4 @@
+__pycache__/
+ohmward_website/
+.cache.sqlite
+.cache_http.sqlite
