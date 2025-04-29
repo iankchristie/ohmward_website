@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-# import plotly.express as px
+import plotly.express as px
 
 
 def generate_colorado_grid(lat_step_km=20, lon_step_km=20):
@@ -31,30 +31,31 @@ def generate_colorado_grid(lat_step_km=20, lon_step_km=20):
     return grid
 
 
-# grid_points = generate_colorado_grid()
-# grid_df = pd.DataFrame(grid_points, columns=["LATITUDE", "LONGITUDE"])
-# for lat, lon in grid_points:
-#     print(f"{lat},{lon}")
+if __name__ == "__main__":
+    grid_points = generate_colorado_grid(lat_step_km=30, lon_step_km=30)
+    grid_df = pd.DataFrame(grid_points, columns=["LATITUDE", "LONGITUDE"])
+    for lat, lon in grid_points:
+        print(f"{lat},{lon}")
 
-# # Plot using plotly
-# fig = px.scatter_geo(
-#     grid_df,
-#     lat="LATITUDE",
-#     lon="LONGITUDE",
-#     scope="usa",
-#     title="Colorado 20 km Grid Points",
-# )
+    # Plot using plotly
+    fig = px.scatter_geo(
+        grid_df,
+        lat="LATITUDE",
+        lon="LONGITUDE",
+        scope="usa",
+        title="Colorado 30 km Grid Points",
+    )
 
-# fig.update_layout(
-#     geo=dict(
-#         center=dict(lat=39.0, lon=-105.5),
-#         projection_scale=6.5,
-#         showland=True,
-#         landcolor="rgb(230, 230, 230)",
-#     )
-# )
+    fig.update_layout(
+        geo=dict(
+            center=dict(lat=39.0, lon=-105.5),
+            projection_scale=6.5,
+            showland=True,
+            landcolor="rgb(230, 230, 230)",
+        )
+    )
 
-# fig.show()
+    fig.show()
 
 latitudes = [
     37,
@@ -1487,3 +1488,45 @@ longitudes = [
     -102.276391,
     -102.044543,
 ]
+
+latitudes_2 = (
+    [37.0] * 21
+    + [37.27027] * 21
+    + [37.540541] * 21
+    + [37.810811] * 21
+    + [38.081081] * 21
+    + [38.351351] * 21
+    + [38.621622] * 21
+    + [38.891892] * 21
+    + [39.162162] * 21
+    + [39.432432] * 21
+    + [39.702703] * 21
+    + [39.972973] * 21
+    + [40.243243] * 21
+    + [40.513514] * 21
+    + [40.783784] * 21
+)
+
+longitudes_2 = [
+    -109.0,
+    -108.652227,
+    -108.304454,
+    -107.956681,
+    -107.608909,
+    -107.261136,
+    -106.913363,
+    -106.56559,
+    -106.217817,
+    -105.870044,
+    -105.522271,
+    -105.174499,
+    -104.826726,
+    -104.478953,
+    -104.13118,
+    -103.783407,
+    -103.435634,
+    -103.087861,
+    -102.740089,
+    -102.392316,
+    -102.044543,
+] * 15

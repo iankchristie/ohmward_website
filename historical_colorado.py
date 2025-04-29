@@ -3,7 +3,7 @@ import openmeteo_requests
 import requests_cache
 import pandas as pd
 from retry_requests import retry
-from cover_colorado import latitudes, longitudes
+from cover_colorado import latitudes_2, longitudes_2
 
 # from cover_colorado import latitudes, longitudes
 from datetime import datetime, timedelta
@@ -42,8 +42,10 @@ def get_historical(date: datetime, batch_size: int = 50) -> pd.DataFrame:
     openmeteo = openmeteo_requests.Client(session=retry_session)
 
     # Prepare batching of locations
-    assert len(latitudes) == len(longitudes), "Latitude and longitude lists must match"
-    locations = list(zip(latitudes, longitudes))
+    assert len(latitudes_2) == len(
+        longitudes_2
+    ), "Latitude and longitude lists must match"
+    locations = list(zip(latitudes_2, longitudes_2))
     batches = [
         locations[i : i + batch_size] for i in range(0, len(locations), batch_size)
     ]
