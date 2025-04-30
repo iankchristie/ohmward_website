@@ -19,13 +19,9 @@ def update_predictions():
     update_forecast_file()
 
 
-# Initial load
-# update_predictions()
-
 # Scheduler setup
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=update_predictions, trigger="interval", hours=1)
-scheduler.start()
 
 
 @app.route("/")
@@ -55,4 +51,6 @@ def predict():
 
 
 if __name__ == "__main__":
+    update_predictions()
+    scheduler.start()
     app.run(host="0.0.0.0", port=8080)
